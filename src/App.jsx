@@ -15,6 +15,7 @@ import Plans from './components/Plans'
 import Contact from './components/Contact'
 import AuthModal from './components/AuthModal'
 import Dashboard from './components/Dashboard'
+import AdminPanel from './components/AdminPanel'
 import Footer from './components/Footer'
 
 function App() {
@@ -26,7 +27,10 @@ function App() {
   useEffect(() => {
     // Check for existing session
     const currentUser = authService.getCurrentUser()
-    if (currentUser) setUser(currentUser)
+    if (currentUser) {
+      setUser(currentUser)
+      if (currentUser.role === 'admin') setActiveSection('admin')
+    }
 
     const handleScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
@@ -47,7 +51,7 @@ function App() {
     setActiveSection(id)
     const element = document.getElementById(id)
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -56,6 +60,11 @@ function App() {
   const handleAuthSuccess = (userData) => {
     setUser(userData)
     setShowAuthModal(false)
+    if (userData.role === 'admin') {
+      setActiveSection('admin')
+    } else {
+      setActiveSection('dashboard')
+    }
   }
 
   const handleLogout = () => {
@@ -68,12 +77,20 @@ function App() {
     if (!user) {
       setShowAuthModal(true)
     } else {
-      setActiveSection('dashboard')
+      setActiveSection(user.role === 'admin' ? 'admin' : 'dashboard')
     }
   }
 
+  // Scroll snap should only be active on the main landing page
+  const noSnapVews = ['dashboard', 'admin'];
+  const wrapperClass = `app-wrapper ${noSnapVews.includes(activeSection) ? 'no-snap' : ''}`;
+
+  if (activeSection === 'admin' && user?.role === 'admin') {
+    return <AdminPanel onLogout={handleLogout} />;
+  }
+
   return (
-    <div className="app-wrapper">
+    <div className={wrapperClass}>
       <div className="synth-bg">
         <div className="grid"></div>
       </div>
@@ -86,7 +103,7 @@ function App() {
         handleNavClick={handleNavClick}
         user={user}
         onAuthClick={() => setShowAuthModal(true)}
-        onDashboardClick={() => setActiveSection('dashboard')}
+        onDashboardClick={() => setActiveSection(user?.role === 'admin' ? 'admin' : 'dashboard')}
       />
 
       {activeSection === 'dashboard' && user ? (
@@ -118,3 +135,4 @@ function App() {
 }
 
 export default App
+

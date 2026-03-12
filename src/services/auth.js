@@ -1,5 +1,3 @@
-// ExtremeGym Auth Service - Simulating a Database with LocalStorage
-
 const USERS_KEY = 'extremegym_users';
 const SESSION_KEY = 'extremegym_session';
 
@@ -7,29 +5,43 @@ export const authService = {
     // Get all users from "database"
     getUsers: () => {
         const users = localStorage.getItem(USERS_KEY);
-        return users ? JSON.parse(users) : [];
+        // Default admin user if database is empty or doesn't have it
+        const defaultUsers = [{
+            username: 'admin',
+            password: 'admin123@',
+            role: 'admin',
+            name: 'System Admin',
+            email: 'admin@extremegym.com'
+        }];
+        const storedUsers = users ? JSON.parse(users) : [];
+
+        if (!storedUsers.find(u => u.username === 'admin')) {
+            storedUsers.unshift(defaultUsers[0]);
+        }
+
+        return storedUsers;
     },
 
     // Register a new user
-    signup: (username, password, plan = 'Basic Node') => {
+    signup: (userData) => {
         const users = authService.getUsers();
 
-        if (users.find(u => u.username === username)) {
-            throw new Error('Usuário já existe!');
+        if (users.find(u => u.username === userData.username || u.email === userData.email)) {
+            throw new Error('Usuário ou Email já cadastrado!');
         }
 
         const newUser = {
             id: Date.now(),
-            username,
-            password, // In a real app, never store plain text passwords!
-            plan,
-            joinDate: new Date().toLocaleDateString(),
-            stats: { weight: '80kg', bodyFat: '15%' }
+            ...userData,
+            role: 'user',
+            joinDate: new Date().toISOString(),
+            status: 'Ativo',
+            paymentStatus: Math.random() > 0.3 ? 'Pago' : 'Pendente' // Simulating payment
         };
 
         users.push(newUser);
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        return authService.login(username, password);
+        return authService.login(userData.username, userData.password);
     },
 
     // Login existing user
@@ -48,14 +60,20 @@ export const authService = {
         return sessionData;
     },
 
-    // Logout
+    // Update user (for admin)
+    updateUser: (userId, newData) => {
+        const users = authService.getUsers();
+        const updatedUsers = users.map(u => u.id === userId ? { ...u, ...newData } : u);
+        localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
+    },
+
     logout: () => {
         localStorage.removeItem(SESSION_KEY);
     },
 
-    // Check current session
     getCurrentUser: () => {
         const session = localStorage.getItem(SESSION_KEY);
         return session ? JSON.parse(session) : null;
     }
 };
+

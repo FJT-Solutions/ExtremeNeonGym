@@ -10,6 +10,7 @@ const Plans = ({ onJoin }) => (
                 <ul>
                     <li>Acesso Musculação</li>
                     <li>App de Treino</li>
+                    <li>Sessão Demo AI</li>
                 </ul>
                 <button className="neon-btn cyan" onClick={() => onJoin('Basic Node')}>Assinar</button>
             </div>
@@ -21,8 +22,20 @@ const Plans = ({ onJoin }) => (
                     <li>Acesso Total</li>
                     <li>Aulas Coletivas</li>
                     <li>Bioimpedância</li>
+                    <li>Personal AI 24h</li>
                 </ul>
                 <button className="neon-btn" onClick={() => onJoin('Synth Pro')}>Assinar</button>
+            </div>
+            <div className="plan-card neon-border-purple">
+                <h3>Cyber Elite</h3>
+                <p className="price">R$ 299,90</p>
+                <ul>
+                    <li>Acesso VIP Ultra</li>
+                    <li>Personal Humano + AI</li>
+                    <li>Suplementos Mensais</li>
+                    <li>Sauna Infrared</li>
+                </ul>
+                <button className="neon-btn purple" onClick={() => onJoin('Cyber Elite')}>Assinar</button>
             </div>
         </div>
     </section>
