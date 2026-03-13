@@ -67,7 +67,7 @@ const AdminPanel = ({ user, onLogout }) => {
                     <div className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>📊 Dashboard</div>
                     
                     {/* Menus based on Role Rules */}
-                    {hasRole(['superadmin', 'admin', 'recepcao']) && (
+                    {hasRole(['superadmin', 'admin', 'recepcao', 'financeiro', 'instrutor']) && (
                         <div className={`admin-nav-item ${activeTab === 'alunos' ? 'active' : ''}`} onClick={() => setActiveTab('alunos')}>👥 Alunos</div>
                     )}
                     {hasRole(['superadmin', 'admin', 'recepcao']) && (
@@ -117,13 +117,84 @@ const AdminDashboard = ({ stats }) => (
 );
 
 const AdminStudents = ({ users, setUsers, currentUser }) => {
-    const handleStatusUpdate = (userId, field, value) => {
-        const updated = users.map(u => u.id === userId ? { ...u, [field]: value } : u);
+    const [editingUser, setEditingUser] = useState(null);
+
+    const isSuperOrAdmin = ['superadmin', 'admin'].includes(currentUser.role);
+    const isFinOrRecep = ['financeiro', 'recepcao'].includes(currentUser.role);
+    const isInstrutor = currentUser.role === 'instrutor';
+
+    const canEditAll = isSuperOrAdmin;
+    const canEditStatus = isSuperOrAdmin || isFinOrRecep;
+    const canEditMed = isSuperOrAdmin || isInstrutor;
+
+    const handleSave = (e) => {
+        e.preventDefault();
+        const updated = users.map(u => u.id === editingUser.id ? editingUser : u);
         setUsers(updated);
         localStorage.setItem('extremegym_users', JSON.stringify(updated));
+        setEditingUser(null);
     };
 
-    const isStaffOrAdmin = ['superadmin', 'admin', 'recepcao'].includes(currentUser.role);
+    if (editingUser) {
+        return (
+            <div className="fade-in">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h1 className="glow-text-cyan">Editar Aluno: {editingUser.name || editingUser.username}</h1>
+                    <button className="neon-btn small secondary" onClick={() => setEditingUser(null)}>Voltar para Tabela</button>
+                </div>
+                <form className="admin-form" onSubmit={handleSave} style={{ marginTop: '2rem', background: 'rgba(20,20,30,0.8)', padding: '2rem', borderRadius: '10px', border: '1px solid var(--neon-cyan)' }}>
+                    
+                    <h3 className="glow-text-purple" style={{ marginBottom: '1rem' }}>Dados Pessoais</h3>
+                    <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+                        <div>
+                            <label className="small-detail">Nome {canEditAll ? '' : '(Bloqueado)'}</label>
+                            <input className={`neon-input full-width ${!canEditAll ? 'disabled' : ''}`} value={editingUser.name || editingUser.username || ''} onChange={e => setEditingUser({...editingUser, name: e.target.value})} readOnly={!canEditAll} />
+                        </div>
+                        <div>
+                            <label className="small-detail">CPF {canEditAll ? '' : '(Bloqueado)'}</label>
+                            <input className={`neon-input full-width ${!canEditAll ? 'disabled' : ''}`} placeholder="000.000.000-00" value={editingUser.cpf || ''} onChange={e => setEditingUser({...editingUser, cpf: e.target.value})} readOnly={!canEditAll} />
+                        </div>
+                        <div>
+                            <label className="small-detail">Telefone {canEditAll ? '' : '(Bloqueado)'}</label>
+                            <input className={`neon-input full-width ${!canEditAll ? 'disabled' : ''}`} placeholder="(00) 00000-0000" value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} readOnly={!canEditAll} />
+                        </div>
+                    </div>
+
+                    <h3 className="glow-text-purple" style={{ marginBottom: '1rem' }}>Matrícula & Plano</h3>
+                    <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+                        <div>
+                            <label className="small-detail">Plano Atual {canEditStatus ? '' : '(Bloqueado)'}</label>
+                            <select className={`neon-input full-width ${!canEditStatus ? 'disabled' : ''}`} value={editingUser.plano || ''} onChange={e => setEditingUser({...editingUser, plano: e.target.value})} disabled={!canEditStatus}>
+                                <option value="">Sem Plano Definido</option>
+                                <option value="Mensal (R$ 100)">Mensal (R$ 100)</option>
+                                <option value="Semestral (R$ 550)">Semestral (R$ 550)</option>
+                                <option value="Anual (R$ 1000)">Anual (R$ 1000)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="small-detail">Status da Matrícula {canEditStatus ? '' : '(Bloqueado)'}</label>
+                            <select className={`neon-input full-width ${!canEditStatus ? 'disabled' : ''}`} value={editingUser.statusMatricula || editingUser.status || 'Ativo'} onChange={e => setEditingUser({...editingUser, statusMatricula: e.target.value, status: e.target.value})} disabled={!canEditStatus}>
+                                <option value="Ativo">Ativo</option>
+                                <option value="Inativo">Inativo</option>
+                                <option value="Pendente">Pendente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h3 className="glow-text-pink" style={{ marginBottom: '1rem' }}>Ficha de Saúde</h3>
+                    <div>
+                        <label className="small-detail glow-text-pink">Observações Médicas {canEditMed ? '' : '(Bloqueado)'}</label>
+                        <p className="small-detail" style={{marginBottom: '10px'}}>Instruções clínicas, lesões, laudos ou restrições (ex: epicondilite, hipertensão).</p>
+                        <textarea className={`neon-input full-width ${!canEditMed ? 'disabled' : ''}`} value={editingUser.observacoesMedicas || ''} onChange={e => setEditingUser({...editingUser, observacoesMedicas: e.target.value})} readOnly={!canEditMed} rows="4" placeholder="Nenhuma observação registrada."></textarea>
+                    </div>
+
+                    <div className="btn-row full-width" style={{ marginTop: '2rem' }}>
+                        <button type="submit" className="neon-btn glow-cyan">Salvar Informações</button>
+                    </div>
+                </form>
+            </div>
+        );
+    }
 
     return (
         <div className="fade-in">
@@ -133,41 +204,39 @@ const AdminStudents = ({ users, setUsers, currentUser }) => {
                     <thead>
                         <tr>
                             <th>Nome/Usuário</th>
-                            <th>Email</th>
+                            <th>Plano</th>
+                            <th>Status Matrícula</th>
                             <th>Cadastro</th>
-                            <th>Pagamento</th>
-                            <th>Status</th>
+                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {users.filter(u => !['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'].includes(u.role)).map(user => (
                             <tr key={user.id}>
-                                <td>{user.name || user.username}</td>
-                                <td>{user.email || 'N/A'}</td>
-                                <td>{new Date(user.joinDate).toLocaleDateString()}</td>
                                 <td>
-                                    {isStaffOrAdmin ? (
-                                        <select
-                                            value={user.paymentStatus || 'Pendente'}
-                                            className="neon-input"
-                                            style={{ padding: '5px', fontSize: '0.8rem' }}
-                                            onChange={(e) => handleStatusUpdate(user.id, 'paymentStatus', e.target.value)}
-                                        >
-                                            <option value="Pago">Pago</option>
-                                            <option value="Pendente">Pendente</option>
-                                            <option value="Atrasado">Atrasado</option>
-                                        </select>
-                                    ) : (
-                                        <span>{user.paymentStatus || 'Pendente'}</span>
+                                    <strong>{user.name || user.username}</strong>
+                                    <div style={{fontSize: '0.75rem', color: '#ccc', marginTop: '4px'}}>
+                                        CPF: {user.cpf || 'Não Infs.'} | Tel: {user.telefone || 'Não Inf.'}
+                                    </div>
+                                    {user.observacoesMedicas && (
+                                        <div style={{fontSize: '0.7rem', color: 'var(--neon-pink)', marginTop: '2px'}}>⚠️ Possui Observações Médicas</div>
                                     )}
                                 </td>
+                                <td>{user.plano || 'Sem Plano'}</td>
                                 <td>
-                                    <span className={`status-badge ${user.status === 'Ativo' ? 'active' : 'inactive'}`}>
-                                        {user.status || 'Ativo'}
+                                    <span className={`status-badge ${(user.statusMatricula || user.status) === 'Ativo' ? 'active' : 'inactive'}`}>
+                                        {user.statusMatricula || user.status || 'Ativo'}
                                     </span>
+                                </td>
+                                <td>{new Date(user.joinDate).toLocaleDateString()}</td>
+                                <td>
+                                    <button className="neon-btn small" onClick={() => setEditingUser(user)}>Detalhes / Editar</button>
                                 </td>
                             </tr>
                         ))}
+                        {users.filter(u => !['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'].includes(u.role)).length === 0 && (
+                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Nenhum aluno cadastrado.</td></tr>
+                        )}
                     </tbody>
                 </table>
             </div>
