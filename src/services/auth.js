@@ -9,8 +9,8 @@ export const authService = {
         const defaultUsers = [
             { id: 1, username: 'super', password: '123', role: 'superadmin', name: 'Super Admin', email: 'super@extremegym.com', joinDate: new Date().toISOString() },
             { id: 2, username: 'admin', password: '123', role: 'admin', name: 'Gerente Admin', email: 'admin@extremegym.com', joinDate: new Date().toISOString() },
-            { id: 3, username: 'finance', password: '123', role: 'financeiro', name: 'Ana Finanças', email: 'finance@extremegym.com', joinDate: new Date().toISOString() },
-            { id: 4, username: 'recep', password: '123', role: 'recepcao', name: 'Carlos Recepção', email: 'recep@extremegym.com', joinDate: new Date().toISOString() },
+            { id: 3, username: 'finance', password: '123', role: 'financeiro', name: 'Financeiro', email: 'finance@extremegym.com', joinDate: new Date().toISOString() },
+            { id: 4, username: 'recep', password: '123', role: 'recepcao', name: 'Recepção', email: 'recep@extremegym.com', joinDate: new Date().toISOString() },
             { id: 5, username: 'brutal', password: '123', role: 'instrutor', name: 'Mestre Brutal', email: 'brutal@extremegym.com', joinDate: new Date().toISOString() },
         ];
         

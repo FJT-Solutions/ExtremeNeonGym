@@ -7,75 +7,94 @@ export const trainingService = {
         // Simulating AI logic based on user data
         const daysCount = parseInt(userData.availability) || 3;
         const focus = userData.focus || "Geral";
-        const equipment = userData.equipment || [];
         const limitations = userData.limitations || "";
 
-        const allPossibleDays = [
-            {
-                dia: "Segunda-feira",
-                foco: focus === "Ganhar massa" ? "Peito e Tríceps" : focus === "Focar em pernas" ? "Quadríceps" : "Superior (Push)",
-                exercicios: [
-                    { nome: "Supino Reto", series: 4, reps: "10-12", descanso: "90s", slug_gif: "bench-press", instrucao_curta: "Mantenha as escápulas retraídas e planta dos pés no chão." },
-                    { nome: "Desenvolvimento Halteres", series: 3, reps: "12", descanso: "60s", slug_gif: "shoulder-press", instrucao_curta: "Não desça além da linha das orelhas." },
-                    { nome: "Tríceps Testa", series: 3, reps: "15", descanso: "45s", slug_gif: "skull-crusher", instrucao_curta: "Mantenha os cotovelos apontando para o teto." }
-                ]
-            },
-            {
-                dia: "Terça-feira",
-                foco: focus === "Focar em pernas" ? "Posterior e Glúteo" : "Costas e Bíceps",
-                exercicios: [
-                    { nome: "Puxada Frontal", series: 4, reps: "12", descanso: "60s", slug_gif: "lat-pulldown", instrucao_curta: "Puxe a barra em direção ao peito, não ao pescoço." },
-                    { nome: "Remada Curvada", series: 3, reps: "10", descanso: "90s", slug_gif: "bent-over-row", instrucao_curta: "Mantenha a coluna neutra e core ativado." },
-                    { nome: "Rosca Martelo", series: 3, reps: "12", descanso: "45s", slug_gif: "hammer-curl", instrucao_curta: "Suba o halter sem balançar o corpo." }
-                ]
-            },
-            {
-                dia: "Quarta-feira",
-                foco: "Membros Inferiores",
-                exercicios: [
-                    { nome: "Agachamento Livre", series: 4, reps: "8-10", descanso: "120s", slug_gif: "squat", instrucao_curta: "Peso nos calcanhares e joelhos para fora." },
-                    { nome: "Leg Press 45", series: 3, reps: "12", descanso: "90s", slug_gif: "leg-press", instrucao_curta: "Não estenda totalmente os joelhos no topo." },
-                    { nome: "Cadeira Extensora", series: 3, reps: "15", descanso: "45s", slug_gif: "leg-extension", instrucao_curta: "Contraia bem o quadríceps no topo." }
-                ]
-            },
-            {
-                dia: "Quinta-feira",
-                foco: "Ombros e Core",
-                exercicios: [
-                    { nome: "Elevação Lateral", series: 4, reps: "15", descanso: "45s", slug_gif: "lateral-raise", instrucao_curta: "Pense em empurrar o peso para os lados, não para cima." },
-                    { nome: "Encolhimento Halteres", series: 3, reps: "12", descanso: "60s", slug_gif: "shrugs", instrucao_curta: "Movimento vertical, sem girar os ombros." },
-                    { nome: "Prancha Abdominal", series: 3, reps: "45s", descanso: "45s", slug_gif: "plank", instrucao_curta: "Mantenha o corpo em linha reta e abdômen contraído." }
-                ]
-            },
-            {
-                dia: "Sexta-feira",
-                foco: "Full Body / Cardio HIIT",
-                exercicios: [
-                    { nome: "Burpees", series: 3, reps: "10", descanso: "60s", slug_gif: "burpees", instrucao_curta: "Salte com explosão e mantenha o ritmo." },
-                    { nome: "Kettlebell Swing", series: 3, reps: "20", descanso: "60s", slug_gif: "kettlebell-swing", instrucao_curta: "O movimento vem do quadril, não dos braços." },
-                    { nome: "Mountain Climbers", series: 3, reps: "30s", descanso: "30s", slug_gif: "mountain-climbers", instrucao_curta: "Mantenha a postura de prancha estável." }
-                ]
+        // Fetch gym equipment from localStorage
+        const equipmentData = localStorage.getItem('extremegym_equipment');
+        let allEquipment = [];
+        if (equipmentData) {
+            allEquipment = JSON.parse(equipmentData).filter(eq => eq.status === 'Ativo');
+        }
+
+        // Fallback if no equipment is available (prevent crash)
+        if (allEquipment.length === 0) {
+            allEquipment = [
+                { id: 'fallback', name: 'Agachamento Livre (Peso do Corpo)', target_muscle: 'Pernas', instructions: 'Agache mantendo a coluna reta.', gif_url: 'https://media.giphy.com/media/l41lM8A5pBAH7U5Xy/giphy.gif' }
+            ];
+        }
+
+        // Group equipment by body part (rudimentary AI logic)
+        const grouped = {
+            'Peito': [],
+            'Costas': [],
+            'Pernas': [],
+            'Braços': [],
+            'Ombros': [],
+            'Geral': []
+        };
+
+        allEquipment.forEach(eq => {
+            const bodyPart = eq.body_part || 'Geral';
+            if (grouped[bodyPart]) {
+                grouped[bodyPart].push(eq);
+            } else {
+                grouped['Geral'].push(eq);
             }
+        });
+
+        const schedules = [
+            { dia: "Segunda-feira", foco: "Peito e Tríceps", parts: ['Peito', 'Braços'] },
+            { dia: "Terça-feira", foco: "Costas e Bíceps", parts: ['Costas', 'Braços'] },
+            { dia: "Quarta-feira", foco: "Pernas", parts: ['Pernas', 'Geral'] },
+            { dia: "Quinta-feira", foco: "Ombros e Core", parts: ['Ombros', 'Geral'] },
+            { dia: "Sexta-feira", foco: "Full Body", parts: ['Peito', 'Costas', 'Pernas'] }
         ];
 
         // Filter and adapt based on limitations
-        const adaptedDays = allPossibleDays.slice(0, daysCount).map((day, dayIdx) => {
-            if (limitations.toLowerCase().includes("ombro")) {
-                day.exercicios = day.exercicios.map(ex => {
-                    if (ex.nome.includes("Supino") || ex.nome.includes("Desenvolvimento")) {
-                        return { ...ex, nome: ex.nome + " (Amplitude Reduzida)", instrucao_curta: ex.instrucao_curta + " AVISO: Respeite a dor no ombro." };
-                    }
-                    return ex;
-                });
+        const adaptedDays = schedules.slice(0, daysCount).map((schedule, dayIdx) => {
+            let dayExercises = [];
+            
+            // Collect exercises for this day's focus
+            schedule.parts.forEach(part => {
+                if (grouped[part]) {
+                    dayExercises = [...dayExercises, ...grouped[part]];
+                }
+            });
+
+            // If not enough specific exercises, just pull some generic ones
+            if (dayExercises.length < 2) {
+                dayExercises = [...dayExercises, ...allEquipment].slice(0, 4);
             }
 
-            // Add unique IDs for each exercise based on day and index
-            day.exercicios = day.exercicios.map((ex, exIdx) => ({
-                ...ex,
-                id: `day-${dayIdx}-ex-${exIdx}-${ex.slug_gif}`
-            }));
+            // Remove duplicates and pick a few (e.g., 3-5 exercises per day)
+            const uniqueEx = Array.from(new Set(dayExercises)).slice(0, 5);
 
-            return day;
+            const formatExec = uniqueEx.map((ex, exIdx) => {
+                let name = ex.name;
+                let instructions = ex.instructions || "Realize o movimento controlado.";
+
+                if (limitations.toLowerCase().includes("ombro") && (name.includes("Supino") || name.includes("Desenvolvimento"))) {
+                    name += " (Amplitude Reduzida)";
+                    instructions += " AVISO: Respeite a dor no ombro.";
+                }
+
+                return {
+                    id: `day-${dayIdx}-ex-${exIdx}-${Date.now()}`,
+                    nome: name,
+                    target_muscle: ex.target_muscle || ex.muscle || "Vários",
+                    series: 4,
+                    reps: "10-15",
+                    descanso: "60s",
+                    gif_url: ex.gif_url,
+                    instructions: instructions
+                };
+            });
+
+            return {
+                dia: schedule.dia,
+                foco: schedule.foco,
+                exercicios: formatExec
+            };
         });
 
         return {
@@ -87,18 +106,10 @@ export const trainingService = {
     adjustTraining: (currentTraining, feedback) => {
         // Simulated AI adjustment based on feedback keywords
         console.log("Adjusting training with feedback:", feedback);
-
         const feedbackLower = feedback.toLowerCase();
         let adjusted = JSON.parse(JSON.stringify(currentTraining));
 
-        if (feedbackLower.includes("mais") && feedbackLower.includes("braço")) {
-            adjusted.semana.forEach(day => {
-                if (day.foco.includes("Superior") || day.foco.includes("Bíceps")) {
-                    day.exercicios.push({ nome: "Rosca Concentrada", series: 3, reps: "12", descanso: "45s", slug_gif: "concentration-curl", instrucao_curta: "Foque na contração de pico do bíceps." });
-                }
-            });
-        }
-
+        // Just blindly filter out things we don't like as requested
         if (feedbackLower.includes("tirar") || feedbackLower.includes("não gosto") || feedbackLower.includes("dor")) {
             adjusted.semana.forEach(day => {
                 day.exercicios = day.exercicios.filter(ex => !feedbackLower.includes(ex.nome.toLowerCase()));

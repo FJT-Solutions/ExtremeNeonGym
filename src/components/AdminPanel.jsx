@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../services/auth';
 import { trainingService } from '../services/training';
+import { exerciseDBService } from '../services/exerciseDB';
 import AdminClassManager from './AdminClassManager';
 
 const AdminPanel = ({ user, onLogout }) => {
@@ -45,12 +46,12 @@ const AdminPanel = ({ user, onLogout }) => {
         switch (activeTab) {
             case 'dashboard': return <AdminDashboard stats={{ users, equipment, tickets }} />;
             case 'alunos': return <AdminStudents users={users} setUsers={setUsers} currentUser={user} />;
-            case 'equipamentos': return <AdminEquipment equipment={equipment} setEquipment={setEquipment} />;
+            case 'equipamentos': return <AdminEquipment equipment={equipment} setEquipment={setEquipment} currentUser={user} />;
             case 'suporte': return <AdminSupport tickets={tickets} setTickets={setTickets} />;
             case 'aulas': return <AdminLessons lessons={lessons} setLessons={setLessons} currentUser={user} />;
             case 'catalogo': return <AdminClassManager />;
             case 'usuarios': return <AdminUserManagement users={users} setUsers={setUsers} currentUser={user} />;
-            default: return <AdminDashboard />;
+            default: return <AdminDashboard stats={{ users, equipment, tickets }} />;
         }
     };
 
@@ -65,16 +66,25 @@ const AdminPanel = ({ user, onLogout }) => {
                 <nav className="admin-nav">
                     <div className={`admin-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>📊 Dashboard</div>
                     
-                    {/* Universais */}
-                    <div className={`admin-nav-item ${activeTab === 'alunos' ? 'active' : ''}`} onClick={() => setActiveTab('alunos')}>👥 Alunos</div>
-                    <div className={`admin-nav-item ${activeTab === 'equipamentos' ? 'active' : ''}`} onClick={() => setActiveTab('equipamentos')}>🏋️ Equipamentos</div>
-                    <div className={`admin-nav-item ${activeTab === 'suporte' ? 'active' : ''}`} onClick={() => setActiveTab('suporte')}>📩 Suporte</div>
+                    {/* Menus based on Role Rules */}
+                    {hasRole(['superadmin', 'admin', 'recepcao']) && (
+                        <div className={`admin-nav-item ${activeTab === 'alunos' ? 'active' : ''}`} onClick={() => setActiveTab('alunos')}>👥 Alunos</div>
+                    )}
+                    {hasRole(['superadmin', 'admin', 'recepcao']) && (
+                        <div className={`admin-nav-item ${activeTab === 'equipamentos' ? 'active' : ''}`} onClick={() => setActiveTab('equipamentos')}>🏋️ Equipamentos</div>
+                    )}
+                    {hasRole(['superadmin', 'admin', 'recepcao']) && (
+                        <div className={`admin-nav-item ${activeTab === 'suporte' ? 'active' : ''}`} onClick={() => setActiveTab('suporte')}>📩 Suporte</div>
+                    )}
                     
-                    {/* Aulas (Topic solicitado) */}
-                    <div className={`admin-nav-item ${activeTab === 'aulas' ? 'active' : ''}`} onClick={() => setActiveTab('aulas')}>📅 Cronograma</div>
-                    <div className={`admin-nav-item ${activeTab === 'catalogo' ? 'active' : ''}`} onClick={() => setActiveTab('catalogo')}>📚 Catálogo</div>
-
-                    {/* Gestão de Usuários (Restrito: Superadmin e Admin) */}
+                    {hasRole(['superadmin', 'instrutor']) && (
+                        <div className={`admin-nav-item ${activeTab === 'aulas' ? 'active' : ''}`} onClick={() => setActiveTab('aulas')}>📅 Quadro de Aulas</div>
+                    )}
+                    
+                    {hasRole(['superadmin']) && (
+                        <div className={`admin-nav-item ${activeTab === 'catalogo' ? 'active' : ''}`} onClick={() => setActiveTab('catalogo')}>📚 Catálogo</div>
+                    )}
+                    
                     {hasRole(['superadmin', 'admin']) && (
                         <div className={`admin-nav-item ${activeTab === 'usuarios' ? 'active' : ''}`} onClick={() => setActiveTab('usuarios')}>🔑 Usuários</div>
                     )}
@@ -165,31 +175,89 @@ const AdminStudents = ({ users, setUsers, currentUser }) => {
     );
 };
 
-const AdminEquipment = ({ equipment, setEquipment }) => {
+const AdminEquipment = ({ equipment, setEquipment, currentUser }) => {
     const [editing, setEditing] = useState(null);
-    const [formData, setFormData] = useState({ name: '', number: '', type: '', muscle: '', instructions: '' });
+    const [formData, setFormData] = useState({ name: '', body_part: '', target_muscle: '', type: '', instructions: '', gif_url: '', exercise_id: '', number: '', status: 'Ativo' });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const isSuperAdmin = currentUser?.role === 'superadmin';
+
+    // Seeding API local mock se não houver dados (preservando legados)
+    useEffect(() => {
+        if (!localStorage.getItem('extremegym_equipment') && equipment.length < 3) {
+           const initialData = [
+               { id: 1, name: 'Supino Reto', exercise_id: 'ex_001', number: '01', type: 'Barbell', target_muscle: 'Peitoral maior', body_part: 'Peito', status: 'Ativo', instructions: 'Deite no banco e empurre a barra com os braços.', gif_url: 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJndzB6M3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6Z3R6JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/3o7TKMGpxx8y90680U/giphy.gif' }
+           ];
+           setEquipment(initialData);
+           localStorage.setItem('extremegym_equipment', JSON.stringify(initialData));
+        }
+    }, []);
+
+    useEffect(() => {
+        if (searchTerm.length > 2) {
+            setIsSearching(true);
+            const timer = setTimeout(() => {
+                exerciseDBService.searchExercises(searchTerm).then(results => {
+                    setSearchResults(results);
+                    setIsSearching(false);
+                });
+            }, 300);
+            return () => clearTimeout(timer);
+        } else {
+            setSearchResults([]);
+            setIsSearching(false);
+        }
+    }, [searchTerm]);
+
+    const handleSelectExercise = (ex) => {
+        setFormData({
+            ...formData,
+            exercise_id: ex.exercise_id,
+            name: ex.name,
+            body_part: ex.body_part,
+            target_muscle: ex.target_muscle,
+            type: ex.equipment_type,
+            gif_url: ex.gif_url,
+            instructions: ex.instructions
+        });
+        setSearchTerm('');
+        setSearchResults([]);
+    };
 
     const handleSave = (e) => {
         e.preventDefault();
+        if (!isSuperAdmin) {
+            alert('Acesso negado. Apenas super administradores podem modificar equipamentos.');
+            return;
+        }
+
+        if (!formData.exercise_id) {
+            alert('Por favor, selecione um exercício do catálogo primeiro.');
+            return;
+        }
+
         let newEquip;
         if (editing && editing.id) {
             newEquip = equipment.map(e => e.id === editing.id ? { ...e, ...formData } : e);
         } else {
-            newEquip = [...equipment, { ...formData, id: Date.now(), status: 'Ativo' }];
+            newEquip = [...equipment, { ...formData, id: Date.now() }];
         }
         setEquipment(newEquip);
         localStorage.setItem('extremegym_equipment', JSON.stringify(newEquip));
         setEditing(null);
-        setFormData({ name: '', number: '', type: '', muscle: '', instructions: '' });
     };
 
     const handleDelete = (id) => {
+        if (!isSuperAdmin) return;
         const newEquip = equipment.filter(e => e.id !== id);
         setEquipment(newEquip);
         localStorage.setItem('extremegym_equipment', JSON.stringify(newEquip));
     };
 
     const handleToggleStatus = (id) => {
+        if (!isSuperAdmin) return;
         const newEquip = equipment.map(e => {
             if (e.id === id) {
                 return { ...e, status: e.status === 'Ativo' ? 'Manutenção' : 'Ativo' };
@@ -204,60 +272,148 @@ const AdminEquipment = ({ equipment, setEquipment }) => {
         <div className="fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h1 className="glow-text-cyan">Equipamentos</h1>
-                <button className="neon-btn small" onClick={() => { setEditing('new'); setFormData({ name: '', number: '', type: '', muscle: '', instructions: '' }); }}>+ Novo Equipamento</button>
+                {isSuperAdmin && (
+                    <button className="neon-btn small" onClick={() => { 
+                        setEditing('new'); 
+                        setFormData({ name: '', body_part: '', target_muscle: '', type: '', instructions: '', gif_url: '', exercise_id: '', number: '', status: 'Ativo' }); 
+                        setSearchTerm('');
+                    }}>
+                        + Adicionar Equipamento
+                    </button>
+                )}
             </div>
 
-            {editing && (
-                <form className="admin-form fade-in" onSubmit={handleSave}>
-                    <input className="neon-input" placeholder="Nome" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
-                    <input className="neon-input" placeholder="Nº Equipamento" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} style={{ width: '120px' }} />
-                    <input className="neon-input" placeholder="Tipo (ex: Peito)" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })} />
-                    <input className="neon-input" placeholder="Músculo Alvo" value={formData.muscle} onChange={e => setFormData({ ...formData, muscle: e.target.value })} />
-                    <textarea className="neon-input full-width" placeholder="Instruções" value={formData.instructions} onChange={e => setFormData({ ...formData, instructions: e.target.value })} />
-                    <div className="btn-row full-width">
-                        <button type="button" className="neon-btn secondary small" onClick={() => setEditing(null)}>Cancelar</button>
-                        <button type="submit" className="neon-btn small">Salvar</button>
+            {editing && isSuperAdmin && (
+                <form className="admin-form fade-in" onSubmit={handleSave} style={{ position: 'relative', background: 'rgba(20, 20, 30, 0.8)', padding: '2rem', borderRadius: '10px', border: '1px solid var(--neon-purple)', marginTop: '1rem' }}>
+                    <h2 className="glow-text-purple" style={{marginBottom: '0.5rem'}}>Adicionar via API ExerciseDB</h2>
+                    <p style={{marginBottom: '1.5rem', color: '#ccc', fontSize: '0.9rem'}}>Pesquise pelo exercício desejado abaixo. Todos os dados (nome, músculo, gif) serão preenchidos automaticamente.<br/>A única coisa que você precisará digitar manualmente é o <strong style={{color: 'var(--neon-pink)'}}>Número do Equipamento</strong> e seu Status.</p>
+                    
+                    <div style={{ marginBottom: '2rem', position: 'relative' }}>
+                        <input 
+                            className="neon-input full-width" 
+                            placeholder="➡️ Digite aqui para pesquisar um exercício (ex: supino)..." 
+                            value={searchTerm} 
+                            onChange={e => setSearchTerm(e.target.value)} 
+                            style={{ fontSize: '1.2rem', padding: '1rem', border: '2px solid var(--neon-cyan)' }}
+                        />
+                        {isSearching && <span className="glow-text-pink" style={{ position: 'absolute', right: '15px', top: '20px' }}>Buscando...</span>}
+                        {searchResults.length > 0 && (
+                            <div className="autocomplete-dropdown glass-panel fade-in neon-border-blue" style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, maxHeight: '300px', overflowY: 'auto', background: '#111' }}>
+                                {searchResults.map(ex => (
+                                    <div 
+                                        key={ex.exercise_id} 
+                                        className="autocomplete-item"
+                                        style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '1rem' }}
+                                        onClick={() => handleSelectExercise(ex)}
+                                    >
+                                        <img src={ex.gif_url} alt="gif" style={{width: '60px', borderRadius: '5px'}}/>
+                                        <div>
+                                            <strong style={{color: 'var(--neon-cyan)', fontSize: '1.1rem'}}>{ex.name}</strong> 
+                                            <div style={{fontSize: '0.8rem', color: 'gray'}}>Músculo: {ex.target_muscle} | Equip: {ex.equipment_type}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', opacity: formData.exercise_id ? 1 : 0.4 }}>
+                        <div>
+                            <label className="small-detail glow-text-cyan">Nome do Exercício (Apenas Leitura)</label>
+                            <input className="neon-input full-width disabled" value={formData.name || ''} readOnly placeholder="Automático da API..." />
+                        </div>
+                        <div>
+                            <label className="small-detail glow-text-cyan">Parte do Corpo (Apenas Leitura)</label>
+                            <input className="neon-input full-width disabled" value={formData.body_part || ''} readOnly placeholder="Automático da API..." />
+                        </div>
+                        <div>
+                            <label className="small-detail glow-text-cyan">Músculo Alvo (Apenas Leitura)</label>
+                            <input className="neon-input full-width disabled" value={formData.target_muscle || formData.muscle || ''} readOnly placeholder="Automático da API..." />
+                        </div>
+                        <div>
+                            <label className="small-detail glow-text-cyan">Tipo de Equipamento (Apenas Leitura)</label>
+                            <input className="neon-input full-width disabled" value={formData.type || ''} readOnly placeholder="Automático da API..." />
+                        </div>
+                    </div>
+
+                    <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '1rem' }}>
+                        <div>
+                            <label className="small-detail">Número do Equipamento</label>
+                            <input className="neon-input full-width" placeholder="Ex: 07" value={formData.number || ''} onChange={e => setFormData({ ...formData, number: e.target.value })} required />
+                        </div>
+                        <div>
+                            <label className="small-detail">Status</label>
+                            <select className="neon-input full-width" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                                <option value="Ativo">Ativo</option>
+                                <option value="Manutenção">Manutenção</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {formData.gif_url && (
+                        <div style={{ margin: '1rem 0' }}>
+                            <img src={formData.gif_url} alt="Demonstração" style={{ height: '100px', borderRadius: '8px', border: '1px solid var(--neon-cyan)' }} />
+                        </div>
+                    )}
+
+                    <div className="btn-row full-width" style={{ marginTop: '1.5rem' }}>
+                        <button type="button" className="neon-btn secondary small" onClick={() => { setEditing(null); setSearchTerm(''); setSearchResults([]); }}>Cancelar</button>
+                        <button type="submit" className="neon-btn small glow-cyan">Salvar Equipamento</button>
                     </div>
                 </form>
             )}
 
-            <div className="admin-table-container">
+            <div className="admin-table-container mt-2">
                 <table className="admin-table">
                     <thead>
                         <tr>
-                            <th>Equipamento / Nº</th>
-                            <th>Tipo</th>
-                            <th>Músculo</th>
+                            <th>Nº</th>
+                            <th>Exercício</th>
+                            <th>Tipo (Equip.)</th>
+                            <th>Músculo Alvo</th>
                             <th>Status</th>
-                            <th>Ações</th>
+                            {isSuperAdmin && <th>Ações</th>}
                         </tr>
                     </thead>
                     <tbody>
                         {equipment.map(item => (
                             <tr key={item.id}>
-                                <td>{item.name} {item.number ? `/ ${item.number}` : ''}</td>
+                                <td>{item.number ? String(item.number).padStart(2, '0') : '-'}</td>
+                                <td>{item.name}</td>
                                 <td>{item.type}</td>
-                                <td>{item.muscle}</td>
+                                <td>{item.target_muscle || item.muscle}</td>
                                 <td><span className={`status-badge ${item.status === 'Ativo' ? 'active' : 'inactive'}`}>{item.status}</span></td>
-                                <td>
-                                    <button className="nav-link" style={{ marginRight: '10px' }} onClick={() => { setEditing(item); setFormData(item); }}>Editar</button>
-                                    <button
-                                        className="nav-link"
-                                        style={{ marginRight: '10px', color: item.status === 'Ativo' ? 'var(--neon-purple)' : 'var(--neon-cyan)' }}
-                                        onClick={() => handleToggleStatus(item.id)}
-                                    >
-                                        {item.status === 'Ativo' ? 'Manutenção' : 'Ativar'}
-                                    </button>
-                                    <button className="nav-link" style={{ color: 'var(--neon-pink)' }} onClick={() => handleDelete(item.id)}>Excluir</button>
-                                </td>
+                                {isSuperAdmin && (
+                                    <td>
+                                        <button className="nav-link" style={{ marginRight: '10px' }} onClick={() => { setEditing(item); setFormData({
+                                            ...item,
+                                            target_muscle: item.target_muscle || item.muscle, 
+                                            body_part: item.body_part || 'Desconhecido',
+                                            gif_url: item.gif_url || ''
+                                        }); }}>Editar</button>
+                                        <button
+                                            className="nav-link"
+                                            style={{ marginRight: '10px', color: item.status === 'Ativo' ? 'var(--neon-purple)' : 'var(--neon-cyan)' }}
+                                            onClick={() => handleToggleStatus(item.id)}
+                                        >
+                                            {item.status === 'Ativo' ? 'Manutenção' : 'Ativar'}
+                                        </button>
+                                        <button className="nav-link" style={{ color: 'var(--neon-pink)' }} onClick={() => handleDelete(item.id)}>Excluir</button>
+                                    </td>
+                                )}
                             </tr>
                         ))}
+                        {equipment.length === 0 && (
+                            <tr><td colSpan={isSuperAdmin ? "6" : "5"} style={{ textAlign: 'center', padding: '2rem' }}>Nenhum equipamento cadastrado.</td></tr>
+                        )}
                     </tbody>
                 </table>
             </div>
         </div>
     );
 };
+
+
 
 const AdminLessons = ({ lessons, setLessons, currentUser }) => {
     const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
