@@ -141,43 +141,55 @@ const Dashboard = ({ user, onLogout, onBack }) => {
 
     if (viewState === 'upsell') {
         return (
-            <div className="fade-in" style={{ padding: '3rem 1rem', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-                <h1 className="glow-text-pink" style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>🚫 GERADOR DE TREINO PREMIUM</h1>
-                <p style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>Assine agora e receba treinos personalizados e limitados pela nossa Inteligência Artificial!</p>
-                
-                <div className="glass-panel" style={{ background: 'rgba(20,20,30,0.8)', padding: '1.5rem', borderRadius: '15px', marginBottom: '3rem', border: '1px solid var(--neon-purple)', display: 'inline-block', minWidth: '350px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                        <div style={{ width: '50px', height: '50px', background: 'var(--neon-purple)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>👤</div>
-                        <div style={{ textAlign: 'left' }}>
-                            <strong style={{ display: 'block', fontSize: '1.1rem' }}>{userData.email || userData.username}</strong>
-                            <span style={{ color: 'var(--neon-pink)', fontSize: '0.9rem' }}>💳 Plano Gratuito (expirado)</span>
+            <div className="fade-in" style={{ padding: '3rem 1rem', textAlign: 'center', maxWidth: '1000px', margin: '0 auto' }}>
+                <div style={{ marginBottom: '3rem' }}>
+                    <span className="glow-text-pink" style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Acesso Restrito</span>
+                    <h1 className="glow-text-cyan" style={{ fontSize: '3rem', margin: '1rem 0' }}>Desbloqueie seu Potencial Máximo</h1>
+                    <p style={{ fontSize: '1.2rem', color: '#ccc', maxWidth: '600px', margin: '0 auto' }}>
+                        Eleve seus treinos a um novo patamar com nossa Inteligência Artificial exclusiva. Assine hoje para gerar treinos dinâmicos, ajustados conforme sua rotina, biomecânica e evolução diária.
+                    </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem', alignItems: 'center' }}>
+                    {/* Basic Tier */}
+                    <div className="glass-panel hover-glow" style={{ padding: '3rem 2rem', border: '1px solid rgba(0, 255, 255, 0.3)', borderRadius: '15px', background: 'rgba(10, 15, 25, 0.8)' }}>
+                        <h2 className="glow-text-cyan" style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>Plano BASIC</h2>
+                        <p style={{ color: '#888', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Perfeito para quem quer começar a treinar com inteligência.</p>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <span style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--neon-cyan)' }}>R$ 29</span><span style={{ color: '#888' }}>/mês</span>
                         </div>
+                        <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', margin: '0 0 2rem 0', lineHeight: '2.5' }}>
+                            <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>✔️ <strong style={{ color: '#fff' }}>Treinos de IA</strong> Ilimitados</li>
+                            <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>✔️ Ajustes <strong>dinâmicos</strong> com a IA</li>
+                            <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>✔️ Suporte via App (48h)</li>
+                            <li style={{ color: '#555' }}>❌ Análise e Correção Biomecânica</li>
+                            <li style={{ color: '#555' }}>❌ Dieta e Plano Alimentar (IA)</li>
+                        </ul>
+                        <button className="neon-btn full-width" style={{ padding: '1rem', fontSize: '1rem' }} onClick={() => alert('Redirecionando para portal de pagamento (Stripe)...')}>Assinar Basic</button>
+                    </div>
+
+                    {/* Pro Tier (Highlighted) */}
+                    <div className="glass-panel hover-glow" style={{ padding: '3.5rem 2rem', border: '2px solid var(--neon-pink)', borderRadius: '15px', transform: 'scale(1.05)', background: 'linear-gradient(180deg, rgba(30,15,30,0.9) 0%, rgba(15,10,20,0.9) 100%)', boxShadow: '0 0 30px rgba(255, 0, 255, 0.2)' }}>
+                        <div style={{ background: 'var(--neon-pink)', color: '#000', padding: '0.3rem 1rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', display: 'inline-block', marginBottom: '1rem', textTransform: 'uppercase' }}>Mais Escolhido</div>
+                        <h2 className="glow-text-pink" style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Plano PRO</h2>
+                        <p style={{ color: '#aaa', marginBottom: '1.5rem', fontSize: '0.9rem' }}>A experiência completa da melhor academia tecnológica do mercado.</p>
+                        <div style={{ marginBottom: '2rem' }}>
+                            <span style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--neon-pink)' }}>R$ 59</span><span style={{ color: '#aaa' }}>/mês</span>
+                        </div>
+                        <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', margin: '0 0 2rem 0', lineHeight: '2.5' }}>
+                            <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>🚀 Tudo do <strong style={{color: 'var(--neon-cyan)'}}>Plano Basic</strong></li>
+                            <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>🔥 Treinos Focados de **Alto Rendimento**</li>
+                            <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>🧠 <strong>Plano Alimentar IA</strong> (Refeições/Macros)</li>
+                            <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>📹 Análise de postura e alinhamento</li>
+                            <li>⚡ Suporte VIP Imediato (Personal)</li>
+                        </ul>
+                        <button className="neon-btn glow-pink full-width" style={{ padding: '1rem', fontSize: '1rem', fontWeight: 'bold' }} onClick={() => alert('Redirecionando para portal de pagamento Seguro (Stripe)...')}>ASSINAR PRO AGORA</button>
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-                    <div className="glass-panel hover-glow" style={{ padding: '2rem', border: '1px solid var(--neon-cyan)', borderRadius: '10px' }}>
-                        <h2 className="glow-text-cyan">🥉 BASIC - R$29/mês</h2>
-                        <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', margin: '2rem 0', lineHeight: '2' }}>
-                            <li>✅ Treinos IA ilimitados</li>
-                            <li>✅ Ajustes personalizados</li>
-                            <li>✅ Suporte prioritário</li>
-                        </ul>
-                    </div>
-                    <div className="glass-panel hover-glow" style={{ padding: '2rem', border: '2px solid var(--neon-pink)', borderRadius: '10px', transform: 'scale(1.05)' }}>
-                        <h2 className="glow-text-pink">🥈 PRO - R$59/mês</h2>
-                        <ul style={{ listStyle: 'none', padding: 0, textAlign: 'left', margin: '2rem 0', lineHeight: '2' }}>
-                            <li>✅ Status Premium</li>
-                            <li>✅ + Análise biomecânica</li>
-                            <li>✅ + Plano alimentar IA</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div className="btn-row" style={{ justifyContent: 'center' }}>
-                    <button className="neon-btn glow-pink" onClick={() => alert('Redirecionando para checkout...')}>ASSINAR AGORA</button>
-                    <button className="neon-btn secondary">CONTATO VENDAS</button>
-                    <button className="neon-btn small" style={{ marginLeft: '1rem' }} onClick={() => setViewState(training ? 'training' : 'home')}>Voltar</button>
+                <div className="btn-row" style={{ justifyContent: 'center', marginTop: '2rem' }}>
+                    <button className="nav-link" onClick={() => setViewState(training ? 'training' : 'home')}>Voltar ao Início</button>
+                    <button className="nav-link" style={{ marginLeft: '2rem' }}>Entrar em Contato com Vendas</button>
                 </div>
             </div>
         );
@@ -207,9 +219,10 @@ const Dashboard = ({ user, onLogout, onBack }) => {
                         )}
                         
                         {!isPremium ? (
-                            <div style={{ marginTop: '1.5rem', padding: '1rem', border: '1px solid rgba(255, 0, 85, 0.4)', borderRadius: '8px', background: 'rgba(255, 0, 85, 0.1)' }}>
-                                <p style={{ fontSize: '0.9rem', color: '#ffaaaa' }}>🚫 <strong>Plano Gratuito</strong></p>
-                                <p style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '5px' }}>Você precisa de uma assinatura Ativa para acessar a Inteligência Artificial e Gerar/Ajustar seus treinos.</p>
+                            <div style={{ marginTop: '1.5rem', padding: '1.5rem', border: '1px solid rgba(0, 255, 255, 0.2)', borderRadius: '8px', background: 'rgba(10, 15, 25, 0.9)' }}>
+                                <p style={{ fontSize: '1rem', color: '#fff', marginBottom: '8px' }}>🤖 <strong>Inteligência Artificial de Treinos</strong></p>
+                                <p style={{ fontSize: '0.85rem', color: '#aaa', lineHeight: '1.5' }}>Gere rotinas de treino dinâmicas, perfeitamente adaptadas ao seu corpo e biomecânica, sem se limitar a tabelas impressas antigas.</p>
+                                <button className="neon-btn secondary small full-width" style={{ marginTop: '1rem' }} onClick={() => setViewState('upsell')}>Ver Benefícios do Plano PRO</button>
                             </div>
                         ) : (
                             <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--neon-cyan)' }}>👑 Acesso Premium Ativo (Ilimitado)</p>
