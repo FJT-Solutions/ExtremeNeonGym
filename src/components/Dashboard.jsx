@@ -19,11 +19,17 @@ const Dashboard = ({ user, onLogout, onBack, onCheckout }) => {
     const isPremium = userData.paymentStatus === 'Pago' || ['superadmin', 'admin', 'instrutor', 'financeiro', 'recepcao'].includes(userData.role);
 
     useEffect(() => {
+        // CRITICAL: Block non-premium users from seeing training at all
+        if (!isPremium) {
+            // Clear any previously cached training so they can't bypass via localStorage
+            localStorage.removeItem(`saved_training_${userData.username}`);
+            setViewState('upsell');
+            return;
+        }
+
         const savedTraining = localStorage.getItem(`saved_training_${userData.username}`);
         if (savedTraining) {
             setTraining(JSON.parse(savedTraining));
-            // Show the training dashboard straight away if they have a saved training, or keep on home?
-            // The prompt asks to have "Gerar Meu Treino" button, let's keep it in "home" when mounting, or jump to training if they already have an active one.
             setViewState('training');
         }
 
@@ -33,7 +39,7 @@ const Dashboard = ({ user, onLogout, onBack, onCheckout }) => {
             setCompletedExercises(p.completed || []);
             setXp(p.xp || 0);
         }
-    }, [userData]);
+    }, [userData.username, isPremium]);
 
     const handleGenerateClick = () => {
         if (!isPremium) {
