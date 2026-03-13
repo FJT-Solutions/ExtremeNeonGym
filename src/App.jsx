@@ -147,6 +147,7 @@ function App() {
           const adminRoles = ['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'];
           setActiveSection(user && adminRoles.includes(user.role) ? 'admin' : 'dashboard')
         }}
+        onLogout={handleLogout}
       />
 
       {activeSection === 'dashboard' && user ? (

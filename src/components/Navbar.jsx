@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 
-const Navbar = ({ scrolled, navItems, activeSection, handleNavClick, user, onAuthClick, onDashboardClick }) => {
+const Navbar = ({ scrolled, navItems, activeSection, handleNavClick, user, onAuthClick, onDashboardClick, onLogout }) => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const handleMobileClick = (id) => {
@@ -31,9 +31,14 @@ const Navbar = ({ scrolled, navItems, activeSection, handleNavClick, user, onAut
                         </button>
                     ))}
                     {user ? (
-                        <button className="neon-btn cyan small" onClick={() => { onDashboardClick(); setIsMenuOpen(false); }}>
-                            {user.username}
-                        </button>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button className="neon-btn cyan small" onClick={() => { onDashboardClick(); setIsMenuOpen(false); }}>
+                                {user.username}
+                            </button>
+                            <button className="neon-btn glow-pink small" onClick={() => { onLogout(); setIsMenuOpen(false); }}>
+                                Sair
+                            </button>
+                        </div>
                     ) : (
                         <button
                             className="neon-btn cyan"
