@@ -46,39 +46,72 @@ const Units = () => {
 
     return (
         <section id="units" className="section section-units">
-            <h2 className="glow-text-cyan">Unidades</h2>
-            <div className="radar-container glass-section">
-                <div className="map-container">
-                    {/* Simulated Google Maps Component */}
-                    <div className="map-placeholder-text">
-                        {userLocation ? (
-                            <div className="map-info fade-in">
-                                <p className="glow-text-cyan">Mapa Carregado</p>
-                                <p className="small-detail">Sua posição: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}</p>
-                                {closestGym && (
-                                    <p className="glow-text-pink" style={{ marginTop: '10px' }}>
-                                        Sugerida: {closestGym.name} (A mais próxima!)
-                                    </p>
-                                )}
-                            </div>
-                        ) : mapError ? (
-                            <p className="error-text">{mapError}</p>
-                        ) : (
-                            <p>Solicitando permissão de GPS...</p>
-                        )}
+            <div className="units-header">
+                <h2 className="glow-text-cyan">NOSSAS UNIDADES</h2>
+                <p className="units-subtitle">Encontre a ExtremeGym mais próxima de você.</p>
+            </div>
+
+            <div className="map-view-container">
+                <div className="modern-map-placeholder">
+                    <div className="map-grid-overlay"></div>
+                    {gyms.map(gym => (
+                        <div 
+                            key={gym.id} 
+                            className={`map-marker color-${gym.color} ${closestGym?.id === gym.id ? 'active-marker' : ''}`}
+                            style={{ 
+                                top: `${40 + (gym.lat + 23.55) * 600}%`, 
+                                left: `${50 + (gym.lng + 46.64) * 500}%` 
+                            }}
+                        >
+                            <div className="marker-core"></div>
+                            <div className="marker-pulse"></div>
+                            <div className="marker-tooltip">{gym.name}</div>
+                        </div>
+                    ))}
+                    
+                    {userLocation && (
+                        <div 
+                            className="user-marker"
+                            style={{ 
+                                top: `50%`, 
+                                left: `50%` 
+                            }}
+                        >
+                            <div className="user-icon">📍</div>
+                            <span className="user-text">VOCÊ</span>
+                        </div>
+                    )}
+
+                    <div className="map-controls">
+                        <span className="control-btn">+</span>
+                        <span className="control-btn">-</span>
                     </div>
                 </div>
-                <div className="units-list">
+
+                <div className="units-info-list" id="units-list">
                     {gyms.map(gym => (
-                        <div key={gym.id} className={`unit-item neon-border-${gym.color} ${closestGym?.id === gym.id ? 'highlight-unit' : ''}`}>
-                            <h3>{gym.name}</h3>
-                            <p>{gym.address}</p>
-                            <span className="status">{gym.status}</span>
-                            {closestGym?.id === gym.id && <span className="closest-tag">MAIS PRÓXIMA</span>}
+                        <div 
+                            key={gym.id} 
+                            className={`unit-card-modern neon-border-${gym.color} ${closestGym?.id === gym.id ? 'highlight' : ''}`}
+                        >
+                            <div className="unit-card-main">
+                                <div className="unit-card-title">
+                                    <span className={`status-dot ${gym.status === 'Online' ? 'active' : 'busy'}`}></span>
+                                    <h3>{gym.name}</h3>
+                                </div>
+                                <p className="unit-address-text">{gym.address}</p>
+                                <div className="unit-card-tags">
+                                    <span className="tag-status">{gym.status}</span>
+                                    {closestGym?.id === gym.id && <span className="tag-closest">MAIS PRÓXIMA</span>}
+                                </div>
+                            </div>
+                            <button className="view-unit-btn">VER NO MAPA</button>
                         </div>
                     ))}
                 </div>
             </div>
+
+            {mapError && <p className="map-error-msg">{mapError}</p>}
         </section>
     );
 }

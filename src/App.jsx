@@ -10,7 +10,7 @@ import Services from './components/Services'
 import Units from './components/Units'
 import Gallery from './components/Gallery'
 import SocialFeed from './components/SocialFeed'
-import Testimonials from './components/Testimonials'
+import ClassCarousel from './components/ClassCarousel'
 import Plans from './components/Plans'
 import Contact from './components/Contact'
 import AuthModal from './components/AuthModal'
@@ -29,22 +29,58 @@ function App() {
     const currentUser = authService.getCurrentUser()
     if (currentUser) {
       setUser(currentUser)
-      if (currentUser.role === 'admin') setActiveSection('admin')
+      const adminRoles = ['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'];
+      if (adminRoles.includes(currentUser.role)) setActiveSection('admin')
     }
 
     const handleScroll = () => setScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+
+    // Scroll Spy Logic
+    const sectionRatios = {};
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            sectionRatios[entry.target.id] = entry.intersectionRatio;
+        });
+
+        let maxRatio = 0;
+        let activeCandidate = '';
+
+        for (const id in sectionRatios) {
+            if (sectionRatios[id] > maxRatio) {
+                maxRatio = sectionRatios[id];
+                activeCandidate = id;
+            }
+        }
+
+        if (maxRatio > 0.1) {
+            setActiveSection(activeCandidate);
+        }
+    }, {
+        threshold: [0, 0.2, 0.4, 0.6, 0.8, 1],
+        rootMargin: '-15% 0px -25% 0px'
+    });
+    
+    const currentSections = ['home', 'about', 'services', 'classes', 'units', 'social', 'plans'];
+    currentSections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
   }, [])
 
   const navItems = [
-    { id: 'home', label: 'Início' },
     { id: 'about', label: 'Quem Somos' },
     { id: 'services', label: 'Serviços' },
+    { id: 'classes', label: 'Aulas' },
     { id: 'units', label: 'Unidades' },
     { id: 'social', label: 'Social' },
     { id: 'plans', label: 'Planos' },
-    { id: 'contact', label: 'Contato' },
   ]
 
   const handleNavClick = (id) => {
@@ -60,7 +96,8 @@ function App() {
   const handleAuthSuccess = (userData) => {
     setUser(userData)
     setShowAuthModal(false)
-    if (userData.role === 'admin') {
+    const adminRoles = ['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'];
+    if (adminRoles.includes(userData.role)) {
       setActiveSection('admin')
     } else {
       setActiveSection('dashboard')
@@ -85,8 +122,11 @@ function App() {
   const noSnapVews = ['dashboard', 'admin'];
   const wrapperClass = `app-wrapper ${noSnapVews.includes(activeSection) ? 'no-snap' : ''}`;
 
-  if (activeSection === 'admin' && user?.role === 'admin') {
-    return <AdminPanel onLogout={handleLogout} />;
+  const adminRoles = ['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'];
+  const isStaff = user && adminRoles.includes(user.role);
+
+  if (activeSection === 'admin' && isStaff) {
+    return <AdminPanel user={user} onLogout={handleLogout} />;
   }
 
   return (
@@ -103,7 +143,10 @@ function App() {
         handleNavClick={handleNavClick}
         user={user}
         onAuthClick={() => setShowAuthModal(true)}
-        onDashboardClick={() => setActiveSection(user?.role === 'admin' ? 'admin' : 'dashboard')}
+        onDashboardClick={() => {
+          const adminRoles = ['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'];
+          setActiveSection(user && adminRoles.includes(user.role) ? 'admin' : 'dashboard')
+        }}
       />
 
       {activeSection === 'dashboard' && user ? (
@@ -113,12 +156,11 @@ function App() {
           <Hero onStart={() => handleJoinClick('Basic')} />
           <About />
           <Services />
+          <ClassCarousel />
           <Units />
           <Gallery />
           <SocialFeed />
-          <Testimonials />
           <Plans onJoin={handleJoinClick} />
-          <Contact />
         </main>
       )}
 

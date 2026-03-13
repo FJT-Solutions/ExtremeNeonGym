@@ -5,20 +5,25 @@ export const authService = {
     // Get all users from "database"
     getUsers: () => {
         const users = localStorage.getItem(USERS_KEY);
-        // Default admin user if database is empty or doesn't have it
-        const defaultUsers = [{
-            username: 'admin',
-            password: 'admin123@',
-            role: 'admin',
-            name: 'System Admin',
-            email: 'admin@extremegym.com'
-        }];
-        const storedUsers = users ? JSON.parse(users) : [];
+        // Default users for all roles
+        const defaultUsers = [
+            { id: 1, username: 'super', password: '123', role: 'superadmin', name: 'Super Admin', email: 'super@extremegym.com', joinDate: new Date().toISOString() },
+            { id: 2, username: 'admin', password: '123', role: 'admin', name: 'Gerente Admin', email: 'admin@extremegym.com', joinDate: new Date().toISOString() },
+            { id: 3, username: 'finance', password: '123', role: 'financeiro', name: 'Ana Finanças', email: 'finance@extremegym.com', joinDate: new Date().toISOString() },
+            { id: 4, username: 'recep', password: '123', role: 'recepcao', name: 'Carlos Recepção', email: 'recep@extremegym.com', joinDate: new Date().toISOString() },
+            { id: 5, username: 'brutal', password: '123', role: 'instrutor', name: 'Mestre Brutal', email: 'brutal@extremegym.com', joinDate: new Date().toISOString() },
+        ];
+        
+        let storedUsers = users ? JSON.parse(users) : [];
 
-        if (!storedUsers.find(u => u.username === 'admin')) {
-            storedUsers.unshift(defaultUsers[0]);
-        }
+        // Ensure all default users exist
+        defaultUsers.forEach(defUser => {
+            if (!storedUsers.find(u => u.username === defUser.username)) {
+                storedUsers.push(defUser);
+            }
+        });
 
+        localStorage.setItem(USERS_KEY, JSON.stringify(storedUsers));
         return storedUsers;
     },
 
