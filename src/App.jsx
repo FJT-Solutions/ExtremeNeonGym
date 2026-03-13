@@ -16,6 +16,7 @@ import Contact from './components/Contact'
 import AuthModal from './components/AuthModal'
 import Dashboard from './components/Dashboard'
 import AdminPanel from './components/AdminPanel'
+import PlanCheckout from './components/PlanCheckout'
 import Footer from './components/Footer'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
   const [activeSection, setActiveSection] = useState('home')
   const [scrolled, setScrolled] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [selectedPlan, setSelectedPlan] = useState(null)
 
   useEffect(() => {
     // Check for existing session
@@ -125,6 +127,10 @@ function App() {
   const adminRoles = ['superadmin', 'admin', 'financeiro', 'recepcao', 'instrutor'];
   const isStaff = user && adminRoles.includes(user.role);
 
+  if (activeSection === 'checkout' && selectedPlan) {
+    return <PlanCheckout plan={selectedPlan} onBack={() => setActiveSection(user ? 'dashboard' : 'home')} />;
+  }
+
   if (activeSection === 'admin' && isStaff) {
     return <AdminPanel user={user} onLogout={handleLogout} />;
   }
@@ -151,7 +157,12 @@ function App() {
       />
 
       {activeSection === 'dashboard' && user ? (
-        <Dashboard user={user} onLogout={handleLogout} onBack={() => setActiveSection('home')} />
+        <Dashboard
+          user={user}
+          onLogout={handleLogout}
+          onBack={() => setActiveSection('home')}
+          onCheckout={(plan) => { setSelectedPlan(plan); setActiveSection('checkout'); }}
+        />
       ) : (
         <main>
           <Hero onStart={() => handleJoinClick('Basic')} />

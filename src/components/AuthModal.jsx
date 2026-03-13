@@ -7,6 +7,7 @@ const AuthModal = ({ onClose, onSuccess }) => {
         username: '',
         email: '',
         phone: '',
+        cpf: '',
         password: '',
         confirmPassword: '',
         consentData: false,
@@ -14,6 +15,28 @@ const AuthModal = ({ onClose, onSuccess }) => {
     });
     const [errors, setErrors] = useState({});
     const [globalError, setGlobalError] = useState('');
+    const [cpfValid, setCpfValid] = useState(null);
+
+    const validateCPFDigits = (cpf) => {
+        const c = cpf.replace(/\D/g, '');
+        if (c.length !== 11 || /^(\d)\1+$/.test(c)) return false;
+        let sum = 0;
+        for (let i = 0; i < 9; i++) sum += parseInt(c[i]) * (10 - i);
+        let r = (sum * 10) % 11;
+        if (r === 10 || r === 11) r = 0;
+        if (r !== parseInt(c[9])) return false;
+        sum = 0;
+        for (let i = 0; i < 10; i++) sum += parseInt(c[i]) * (11 - i);
+        r = (sum * 10) % 11;
+        if (r === 10 || r === 11) r = 0;
+        return r === parseInt(c[10]);
+    };
+
+    const formatCPF = (v) =>
+        v.replace(/\D/g, '').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})/, '$1-$2').replace(/(-\d{2})\d+?$/, '$1');
+
+    const formatPhone = (v) =>
+        v.replace(/\D/g, '').replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4,5})(\d{4})/, '$1-$2').replace(/(-\d{4})\d+?$/, '$1');
 
     const validateField = (name, value) => {
         let error = '';
@@ -40,12 +63,26 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        const val = type === 'checkbox' ? checked : value;
+        let val = type === 'checkbox' ? checked : value;
+        if (name === 'cpf') val = formatCPF(value);
+        if (name === 'phone') val = formatPhone(value);
         setFormData(prev => ({ ...prev, [name]: val }));
-
         if (!isLogin && type !== 'checkbox') {
             const error = validateField(name, val);
             setErrors(prev => ({ ...prev, [name]: error }));
+        }
+    };
+
+    const handleCPFBlur = () => {
+        const raw = formData.cpf.replace(/\D/g, '');
+        if (raw.length === 11) {
+            const valid = validateCPFDigits(raw);
+            setCpfValid(valid);
+            if (!valid) setErrors(p => ({ ...p, cpf: 'CPF inválido. Verifique os números informados.' }));
+            else setErrors(p => ({ ...p, cpf: '' }));
+        } else if (raw.length > 0) {
+            setCpfValid(false);
+            setErrors(p => ({ ...p, cpf: 'CPF incompleto.' }));
         }
     };
 
@@ -79,6 +116,11 @@ const AuthModal = ({ onClose, onSuccess }) => {
 
             if (!formData.consentData || !formData.consentAI) {
                 setGlobalError('Você deve aceitar os termos de consentimento.');
+                return;
+            }
+
+            if (cpfValid !== true) {
+                setGlobalError('CPF inválido. Por favor revise o CPF informado.');
                 return;
             }
 
@@ -122,15 +164,34 @@ const AuthModal = ({ onClose, onSuccess }) => {
                             />
                             {errors.email && <p className="validation-error">{errors.email}</p>}
 
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    name="cpf"
+                                    type="text"
+                                    placeholder="CPF (000.000.000-00)"
+                                    className={`neon-input ${cpfValid === false ? 'error-input' : cpfValid === true ? 'success-input' : ''}`}
+                                    required
+                                    maxLength={14}
+                                    value={formData.cpf}
+                                    onChange={handleInputChange}
+                                    onBlur={handleCPFBlur}
+                                />
+                                {cpfValid === true && <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--neon-cyan)' }}>✔</span>}
+                                {cpfValid === false && <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--neon-pink)' }}>✖</span>}
+                            </div>
+                            {errors.cpf && <p className="validation-error">{errors.cpf}</p>}
+
                             <input
                                 name="phone"
                                 type="tel"
                                 placeholder="Telefone (DDD + Número)"
                                 className="neon-input"
                                 required
+                                maxLength={15}
                                 value={formData.phone}
                                 onChange={handleInputChange}
                             />
+                            {errors.phone && <p className="validation-error">{errors.phone}</p>}
                         </>
                     )}
 

@@ -1759,6 +1759,16 @@
   text-shadow: 0 0 5px var(--neon-pink);
 }
 
+.error-input {
+  border-color: var(--neon-pink) !important;
+  box-shadow: 0 0 8px rgba(255, 0, 85, 0.4) !important;
+}
+
+.success-input {
+  border-color: var(--neon-cyan) !important;
+  box-shadow: 0 0 8px rgba(0, 246, 255, 0.3) !important;
+}
+
 .consent-group {
   display: flex;
   flex-direction: column;

@@ -3,7 +3,7 @@ import Onboarding from './Onboarding'
 import ExerciseCard from './ExerciseCard'
 import { trainingService } from '../services/training'
 
-const Dashboard = ({ user, onLogout, onBack }) => {
+const Dashboard = ({ user, onLogout, onBack, onCheckout }) => {
     const [userData, setUserData] = useState(user);
     const [training, setTraining] = useState(null);
     const [selectedDayIndex, setSelectedDayIndex] = useState(0);
@@ -165,7 +165,7 @@ const Dashboard = ({ user, onLogout, onBack }) => {
                             <li style={{ color: '#555' }}>❌ Análise e Correção Biomecânica</li>
                             <li style={{ color: '#555' }}>❌ Dieta e Plano Alimentar (IA)</li>
                         </ul>
-                        <button className="neon-btn full-width" style={{ padding: '1rem', fontSize: '1rem' }} onClick={() => alert('Redirecionando para portal de pagamento (Stripe)...')}>Assinar Basic</button>
+                        <button className="neon-btn full-width" style={{ padding: '1rem', fontSize: '1rem' }} onClick={() => onCheckout({ name: 'Plano BASIC', price: 29, color: 'var(--neon-cyan)' })}>Assinar Basic</button>
                     </div>
 
                     {/* Pro Tier (Highlighted) */}
@@ -183,7 +183,7 @@ const Dashboard = ({ user, onLogout, onBack }) => {
                             <li style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>📹 Análise de postura e alinhamento</li>
                             <li>⚡ Suporte VIP Imediato (Personal)</li>
                         </ul>
-                        <button className="neon-btn glow-pink full-width" style={{ padding: '1rem', fontSize: '1rem', fontWeight: 'bold' }} onClick={() => alert('Redirecionando para portal de pagamento Seguro (Stripe)...')}>ASSINAR PRO AGORA</button>
+                        <button className="neon-btn glow-pink full-width" style={{ padding: '1rem', fontSize: '1rem', fontWeight: 'bold' }} onClick={() => onCheckout({ name: 'Plano PRO', price: 59, color: 'var(--neon-pink)' })}>ASSINAR PRO AGORA</button>
                     </div>
                 </div>
 
