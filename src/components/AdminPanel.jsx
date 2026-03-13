@@ -127,6 +127,23 @@ const AdminStudents = ({ users, setUsers, currentUser }) => {
     const canEditStatus = isSuperOrAdmin || isFinOrRecep;
     const canEditMed = isSuperOrAdmin || isInstrutor;
 
+    const formatCPF = (value) => {
+        return value
+            .replace(/\D/g, '')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+            .replace(/(-\d{2})\d+?$/, '$1');
+    };
+
+    const formatPhone = (value) => {
+        return value
+            .replace(/\D/g, '')
+            .replace(/(\d{2})(\d)/, '($1) $2')
+            .replace(/(\d{4,5})(\d{4})/, '$1-$2')
+            .replace(/(-\d{4})\d+?$/, '$1');
+    };
+
     const handleSave = (e) => {
         e.preventDefault();
         const updated = users.map(u => u.id === editingUser.id ? editingUser : u);
@@ -152,11 +169,11 @@ const AdminStudents = ({ users, setUsers, currentUser }) => {
                         </div>
                         <div>
                             <label className="small-detail">CPF {canEditAll ? '' : '(Bloqueado)'}</label>
-                            <input className={`neon-input full-width ${!canEditAll ? 'disabled' : ''}`} placeholder="000.000.000-00" value={editingUser.cpf || ''} onChange={e => setEditingUser({...editingUser, cpf: e.target.value})} readOnly={!canEditAll} />
+                            <input className={`neon-input full-width ${!canEditAll ? 'disabled' : ''}`} placeholder="000.000.000-00" maxLength={14} value={editingUser.cpf || ''} onChange={e => setEditingUser({...editingUser, cpf: formatCPF(e.target.value)})} readOnly={!canEditAll} />
                         </div>
                         <div>
                             <label className="small-detail">Telefone {canEditAll ? '' : '(Bloqueado)'}</label>
-                            <input className={`neon-input full-width ${!canEditAll ? 'disabled' : ''}`} placeholder="(00) 00000-0000" value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: e.target.value})} readOnly={!canEditAll} />
+                            <input className={`neon-input full-width ${!canEditAll ? 'disabled' : ''}`} placeholder="(00) 00000-0000" maxLength={15} value={editingUser.telefone || ''} onChange={e => setEditingUser({...editingUser, telefone: formatPhone(e.target.value)})} readOnly={!canEditAll} />
                         </div>
                     </div>
 
