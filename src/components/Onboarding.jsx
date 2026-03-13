@@ -1,32 +1,15 @@
 import React, { useState } from 'react'
 
 const Onboarding = ({ onComplete }) => {
-    const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
-        age: '',
-        weight: '',
-        height: '',
-        gender: '',
-        experience: 'Iniciante',
-        availability: '3x',
-        equipment: [],
-        focus: 'Ganhar massa',
-        limitations: ''
+        nome_completo: '',
+        idade: '',
+        peso: '',
+        altura: '',
+        objetivo: 'Hipertrofia',
+        nivel: 'Iniciante',
+        equipamentos: ''
     });
-
-    const equipmentOptions = [
-        'Halteres', 'Barra', 'Polia', 'Máquinas', 'Smith', 'Leg Press'
-    ];
-
-    const handleCheckChange = (item) => {
-        const newEquip = formData.equipment.includes(item)
-            ? formData.equipment.filter(i => i !== item)
-            : [...formData.equipment, item];
-        setFormData({ ...formData, equipment: newEquip });
-    };
-
-    const nextStep = () => setStep(step + 1);
-    const prevStep = () => setStep(step - 1);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -34,112 +17,68 @@ const Onboarding = ({ onComplete }) => {
     };
 
     return (
-        <div className="onboarding-container fade-in">
-            <div className="onboarding-card neon-border-cyan">
-                <div className="progress-bar">
-                    <div className="progress-fill" style={{ width: `${(step / 3) * 100}%` }}></div>
-                </div>
+        <div className="onboarding-container fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '2rem' }}>
+            <div className="onboarding-card neon-border-cyan" style={{ width: '100%', maxWidth: '600px', background: 'rgba(20, 20, 30, 0.95)', padding: '2.5rem', borderRadius: '15px' }}>
+                <h2 className="glow-text-cyan" style={{ marginBottom: '0.5rem', textAlign: 'center' }}>Primeiro Acesso 🚀</h2>
+                <p style={{ textAlign: 'center', marginBottom: '2rem', color: '#ccc' }}>Precisamos de algumas informações (apenas desta vez) para que nossa IA gere o melhor treino para você.</p>
+                
+                <form onSubmit={handleSubmit}>
+                    <div className="input-group" style={{ marginBottom: '1.5rem' }}>
+                        <label className="small-detail glow-text-cyan">Nome Completo</label>
+                        <input className="neon-input full-width" placeholder="Ex: João da Silva" value={formData.nome_completo} onChange={e => setFormData({ ...formData, nome_completo: e.target.value })} required />
+                    </div>
 
-                {step === 1 && (
-                    <div className="onboarding-step">
-                        <h2 className="glow-text-cyan">Vamos Começar! 🚀</h2>
-                        <p>Conte um pouco sobre você.</p>
+                    <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                         <div className="input-group">
-                            <label>Idade</label>
-                            <input type="number" value={formData.age} onChange={e => setFormData({ ...formData, age: e.target.value })} placeholder="Ex: 25" />
-                        </div>
-                        <div className="input-row">
-                            <div className="input-group">
-                                <label>Peso (kg)</label>
-                                <input type="number" value={formData.weight} onChange={e => setFormData({ ...formData, weight: e.target.value })} placeholder="70" />
-                            </div>
-                            <div className="input-group">
-                                <label>Altura (cm)</label>
-                                <input type="number" value={formData.height} onChange={e => setFormData({ ...formData, height: e.target.value })} placeholder="175" />
-                            </div>
+                            <label className="small-detail glow-text-cyan">Idade</label>
+                            <input className="neon-input full-width" type="number" placeholder="Ex: 25" value={formData.idade} onChange={e => setFormData({ ...formData, idade: e.target.value })} required />
                         </div>
                         <div className="input-group">
-                            <label>Sexo</label>
-                            <select value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}>
-                                <option value="">Selecione</option>
-                                <option value="Masculino">Masculino</option>
-                                <option value="Feminino">Feminino</option>
-                                <option value="Outro">Outro</option>
+                            <label className="small-detail glow-text-cyan">Peso (kg)</label>
+                            <input className="neon-input full-width" type="number" placeholder="Ex: 75" value={formData.peso} onChange={e => setFormData({ ...formData, peso: e.target.value })} required />
+                        </div>
+                        <div className="input-group">
+                            <label className="small-detail glow-text-cyan">Altura (cm)</label>
+                            <input className="neon-input full-width" type="number" placeholder="Ex: 175" value={formData.altura} onChange={e => setFormData({ ...formData, altura: e.target.value })} required />
+                        </div>
+                    </div>
+
+                    <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div className="input-group">
+                            <label className="small-detail glow-text-cyan">Objetivo</label>
+                            <select className="neon-input full-width" value={formData.objetivo} onChange={e => setFormData({ ...formData, objetivo: e.target.value })} required>
+                                <option value="Hipertrofia">Hipertrofia</option>
+                                <option value="Emagrecimento">Emagrecimento</option>
+                                <option value="Definição">Definição</option>
                             </select>
                         </div>
-                        <button className="neon-btn" onClick={nextStep} disabled={!formData.age || !formData.gender}>Próximo</button>
-                    </div>
-                )}
-
-                {step === 2 && (
-                    <div className="onboarding-step">
-                        <h2 className="glow-text-cyan">Seu Nível e Rotina ⚡</h2>
                         <div className="input-group">
-                            <label>Nível de experiência</label>
-                            <select value={formData.experience} onChange={e => setFormData({ ...formData, experience: e.target.value })}>
-                                <option value="Sedentário">Sedentário</option>
-                                <option value="Iniciante">Iniciante (&lt; 6 meses)</option>
-                                <option value="Intermediário">Intermediário (1-2 anos)</option>
+                            <label className="small-detail glow-text-cyan">Nível</label>
+                            <select className="neon-input full-width" value={formData.nivel} onChange={e => setFormData({ ...formData, nivel: e.target.value })} required>
+                                <option value="Iniciante">Iniciante</option>
+                                <option value="Intermediário">Intermediário</option>
                                 <option value="Avançado">Avançado</option>
                             </select>
                         </div>
-                        <div className="input-group">
-                            <label>Disponibilidade (dias na semana)</label>
-                            <select value={formData.availability} onChange={e => setFormData({ ...formData, availability: e.target.value })}>
-                                <option value="3x">3x na semana</option>
-                                <option value="4x">4x na semana</option>
-                                <option value="5x">5x na semana</option>
-                                <option value="Todo dia">Todo dia</option>
-                            </select>
-                        </div>
-                        <div className="input-group">
-                            <label>Foco / Prioridade</label>
-                            <select value={formData.focus} onChange={e => setFormData({ ...formData, focus: e.target.value })}>
-                                <option value="Ganhar massa">Ganhar massa</option>
-                                <option value="Emagrecer">Emagrecer</option>
-                                <option value="Focar em pernas">Focar em pernas</option>
-                                <option value="Focar em braços">Focar em braços</option>
-                            </select>
-                        </div>
-                        <div className="btn-row">
-                            <button className="neon-btn secondary" onClick={prevStep}>Voltar</button>
-                            <button className="neon-btn" onClick={nextStep}>Próximo</button>
-                        </div>
                     </div>
-                )}
 
-                {step === 3 && (
-                    <div className="onboarding-step">
-                        <h2 className="glow-text-pink">Equipamentos e Limites 🛠️</h2>
-                        <div className="input-group">
-                            <label>Equipamentos disponíveis na sua academia:</label>
-                            <div className="checkbox-grid">
-                                {equipmentOptions.map(item => (
-                                    <label key={item} className="checkbox-item">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.equipment.includes(item)}
-                                            onChange={() => handleCheckChange(item)}
-                                        />
-                                        <span>{item}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="input-group">
-                            <label>Limitações ou Dores? (Opcional)</label>
-                            <textarea
-                                value={formData.limitations}
-                                onChange={e => setFormData({ ...formData, limitations: e.target.value })}
-                                placeholder="Ex: Dor no ombro, não posso impacto..."
-                            />
-                        </div>
-                        <div className="btn-row">
-                            <button className="neon-btn secondary" onClick={prevStep}>Voltar</button>
-                            <button className="neon-btn glow-pink" onClick={handleSubmit}>Gerar Meu Treino!</button>
-                        </div>
+                    <div className="input-group" style={{ marginBottom: '2rem' }}>
+                        <label className="small-detail glow-text-cyan">Equipamentos Disponíveis</label>
+                        <p style={{fontSize: '0.8rem', color: '#aaa', marginBottom: '8px'}}>Descreva o que você tem acesso (texto livre).</p>
+                        <textarea 
+                            className="neon-input full-width" 
+                            placeholder="Ex: Tenho 2 halteres de 10kg, uma barra fixa e um elástico..." 
+                            rows="3"
+                            value={formData.equipamentos} 
+                            onChange={e => setFormData({ ...formData, equipamentos: e.target.value })} 
+                            required 
+                        />
                     </div>
-                )}
+
+                    <button type="submit" className="neon-btn glow-pink full-width" style={{ padding: '1rem', fontSize: '1.1rem' }}>
+                        SALVAR E GERAR MEU TREINO
+                    </button>
+                </form>
             </div>
         </div>
     );
