@@ -17,9 +17,6 @@ const Dashboard = ({ user, onLogout, onBack }) => {
 
     // Premium Check Validation
     const isPremium = userData.paymentStatus === 'Pago' || ['superadmin', 'admin', 'instrutor', 'financeiro', 'recepcao'].includes(userData.role);
-    const today = new Date().toISOString().split('T')[0];
-    const freeUsageKey = `free_usage_${userData.username}_${today}`;
-    const [freeUsage, setFreeUsage] = useState(parseInt(localStorage.getItem(freeUsageKey)) || 0);
 
     useEffect(() => {
         const savedTraining = localStorage.getItem(`saved_training_${userData.username}`);
@@ -39,7 +36,7 @@ const Dashboard = ({ user, onLogout, onBack }) => {
     }, [userData]);
 
     const handleGenerateClick = () => {
-        if (!isPremium && freeUsage >= 3) {
+        if (!isPremium) {
             setViewState('upsell');
             return;
         }
@@ -66,11 +63,11 @@ const Dashboard = ({ user, onLogout, onBack }) => {
 
     const generatePlan = (data, adjustment = '') => {
         if (!isPremium) {
-            const newUsage = freeUsage + 1;
-            setFreeUsage(newUsage);
-            localStorage.setItem(freeUsageKey, newUsage);
-            console.log(`[LOG ANTI-ABUSO] IA gerou treino: user_id=${userData.id}, timestamp=${new Date().toISOString()}`);
+            setViewState('upsell');
+            return;
         }
+
+        console.log(`[LOG] IA gerou treino: user_id=${userData.id}, timestamp=${new Date().toISOString()}`);
 
         setViewState('generating');
         setTimeout(() => {
@@ -93,7 +90,7 @@ const Dashboard = ({ user, onLogout, onBack }) => {
 
     const handleAdjustTraining = (e) => {
         e.preventDefault();
-        if (!isPremium && freeUsage >= 3) {
+        if (!isPremium) {
             setShowAdjustment(false);
             setViewState('upsell');
             return;
@@ -210,7 +207,10 @@ const Dashboard = ({ user, onLogout, onBack }) => {
                         )}
                         
                         {!isPremium ? (
-                            <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: '#aaa' }}>Você tem <strong style={{color: 'var(--neon-pink)'}}>{Math.max(0, 3 - freeUsage)} treinos</strong> gratuitos restantes hoje.</p>
+                            <div style={{ marginTop: '1.5rem', padding: '1rem', border: '1px solid rgba(255, 0, 85, 0.4)', borderRadius: '8px', background: 'rgba(255, 0, 85, 0.1)' }}>
+                                <p style={{ fontSize: '0.9rem', color: '#ffaaaa' }}>🚫 <strong>Plano Gratuito</strong></p>
+                                <p style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '5px' }}>Você precisa de uma assinatura Ativa para acessar a Inteligência Artificial e Gerar/Ajustar seus treinos.</p>
+                            </div>
                         ) : (
                             <p style={{ marginTop: '1.5rem', fontSize: '0.9rem', color: 'var(--neon-cyan)' }}>👑 Acesso Premium Ativo (Ilimitado)</p>
                         )}
